@@ -1,0 +1,1 @@
+Ce projet vise à développer un simulateur de files d'attente permettant de modéliser et d'analyser le comportement de systèmes de files d'attente dans divers contextes (banques, supermarchés, réseaux informatiques, etc.).
