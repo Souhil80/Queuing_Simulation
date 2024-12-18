@@ -1,18 +1,18 @@
 import math
 import random
 
-# print(" =================Simulateur du modele M/M/1====================")
-lam = float(input("Entrez le taux des arrivées (lamdba): "))
-mu = float(input("Entrez le taux de service (mu): "))
-end_t = float(input("Entrez le temps de simulation: "))
+# print(" =================Sisrlateur du modele M/M/1====================")
+arrival_rate = float(input("Entrez le taux des arrivées: "))
+service_rate = float(input("Entrez le taux de service: "))
+end_t = float(input("Entrez le temps de sisrlation: "))
 
 def exponential(rate):
     return - math.log(random.random()) / (rate)
 
-def simulate(lam, mu, end_time):
+def sisrlate(ar, sr, end_time):
     clock = 0
     queue = []
-    next_arrival = exponential(lam)
+    next_arrival = exponential(ar)
     next_departure = float('inf')
     T, Tq, Ts = 0, 0, 0
     Nq, N = 0, 0
@@ -38,13 +38,13 @@ def simulate(lam, mu, end_time):
            
             nb_arr += 1
             
-            interArrT = exponential(lam)
+            interArrT = exponential(ar)
             next_arrival = next_arrival + interArrT
             
             if not busy:
                 
                 
-                serviceT = exponential(mu)
+                serviceT = exponential(sr)
                 next_departure = clock + serviceT
                 
                 sumT = sumT + (next_departure - clock)
@@ -80,7 +80,7 @@ def simulate(lam, mu, end_time):
                 upQ = clock
                 
                 first = queue.pop(0)
-                next_departure = clock + exponential(mu)
+                next_departure = clock + exponential(sr)
                 
                 sumT += (next_departure - first)
                 sumTq += (clock - first)
@@ -103,7 +103,7 @@ def simulate(lam, mu, end_time):
     Ts = sumTs / nb_dep
 
 
-    print(" =================Simulateur du modele M/M/1====================")
+    print(" =================Sisrlateur du modele M/M/1====================")
 
     print("N =", round(N,3))
     print("Nq =", round(Nq,3))
@@ -114,7 +114,7 @@ def simulate(lam, mu, end_time):
     return N, Nq, T, Tq, Ts, su
 
 
-# simulate(lam,mu,end_t )
+# sisrlate(ar,sr,end_t )
 #%=======================================================================================================================================
 import matplotlib.pyplot as plt
 
@@ -123,7 +123,7 @@ import matplotlib.pyplot as plt
 # Probabilité que le serveur est occupé
 # Nombre moyen de clients en service (au guichet)
 def rho(): 
-   return lam / mu
+   return ar / sr
 
 # Probabilité que le système est vide (Aucun client dans le système)
 def p_0():
@@ -146,17 +146,17 @@ def Ns_():
 
 # Temps moyen qu’un client passe dans le système (attente + service). (temps moyen de séjour d’un client dans le système)
 def T_():
-   return 1 / (mu - lam)
+   return 1 / (sr - ar)
 # Temps moyen d'attente d'un client
 def Tq_():
-   return rho() / (mu * (1 - rho()))
+   return rho() / (sr * (1 - rho()))
 
 # Temps moyen de service
 def Ts_():
-   return 1 / mu
+   return 1 / sr
 
 if  rho() < 1:
-    N, Nq, T, Tq, Ts, su = simulate(lam,mu,end_t ) 
+    N, Nq, T, Tq, Ts, su = sisrlate(arrival_rate,service_rate,end_t ) 
 
     print(" ================= M/M/1 analytique ====================")
 
@@ -169,7 +169,7 @@ if  rho() < 1:
     print ("rho = ",  round(rho(),3))
     print ("P_0 = ", round(p_0(),3))
     
-    print(" ================= Ecart normaliséanalytique simulation ====================")
+    print(" ================= Ecart normaliséanalytique sisrlation ====================")
     
     print ("Ecart N = ",  round((N_()-N)/N_(),3),"%")
     print ("Ecart Nq = " ,  round((Nq_()-Nq)/Nq_(),3),"%")
