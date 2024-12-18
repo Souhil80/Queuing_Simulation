@@ -1,115 +1,122 @@
+import math
 import random
 
-lam = 5
-mu = 7
-time_sim = 100000
-def simulate_mm1 (l , m, time_sim) :
+# print(" =================Simulateur du modele M/M/1====================")
+lam = float(input("Entrez le taux des arrivées (lamdba): "))
+mu = float(input("Entrez le taux de service (mu): "))
+end_t = float(input("Entrez le temps de simulation: "))
+
+def exponential(rate):
+    return - math.log(random.random()) / (rate)
+
+def simulate(lam, mu, end_time):
     clock = 0
-    queue= []
-    
-    arrival = random.expovariate(lam)
-    departure = float('inf') 
-    
-    NbC = 0
-    
-    Ni = 0
-    sumNi = 0
-    upSumNi = 0
-    
-    Nqi = 0
-    sumNqi = 0
-    upSumNqi = 0
-    
-    sumTS = 0
-    upServer = 0
-    
-    
-    sumTi = 0
-    sumTqi = 0
-    sumTsi = 0
-    
-    
-    server_free = True
+    queue = []
+    next_arrival = exponential(lam)
+    next_departure = float('inf')
+    T, Tq, Ts = 0, 0, 0
+    Nq, N = 0, 0
+    su = 0
+    nb_arr, nb_dep = 0, 0
 
-    while clock <= time_sim:
-        # print(f"clock = {clock}")
-        if arrival < departure:
-            clock = arrival
-            sumNi = sumNi + Ni*(clock - upSumNi)
-            upSumNi = clock
-            Ni=Ni+1
-            if server_free : # Debut de service
-                  departure =  clock + random.expovariate(mu)  
-                  server_free = False
-                  upServer = clock
-                  
-                  sumTi = sumTi + (departure - arrival)
-                  
-                  sumTsi = sumTsi + (departure - clock)
-             
-                  start = clock
-            else:
-                sumNqi = sumNqi + Nqi*(clock - upSumNqi)
-                upSumNqi = clock
-                Nqi = Nqi + 1
-                
-                
-                
-                queue.append(arrival)
-                
-            arrival = clock + random.expovariate(lam)  
-        else :
-            clock = departure
-            sumNi = sumNi + Ni*(clock - upSumNi)
-            upSumNi = clock
-            Ni=Ni - 1
+
+ 
+    sumQ, nbQ, sumN, nbS, susum, upN, upQ, upU = 0, 0, 0, 0, 0, 0, 0, 0
+    sumT, sumTq, sumTs = 0, 0, 0
+    busy = False
+
+    while not (not queue and next_arrival > end_time and next_departure == float('inf')):
+        if (next_arrival <= next_departure and next_arrival < end_time):
             
-            #sumTi = sumTi + (departure - ....)
-            NbC = NbC + 1
-            if queue: # Debut de service 
-                firstArr = queue.pop(0)
-                departure =  clock + random.expovariate(mu)  
-                sumTi = sumTi + (departure - firstArr)
+            clock = next_arrival
+            
+            sumN = sumN + nbS * (clock - upN)
+            nbS = nbS + 1
+            upN = clock
+            
+            
+           
+            nb_arr += 1
+            
+            interArrT = exponential(lam)
+            next_arrival = next_arrival + interArrT
+            
+            if not busy:
+                
+                
+                serviceT = exponential(mu)
+                next_departure = clock + serviceT
+                
+                sumT = sumT + (next_departure - clock)
+                sumTs = sumTs + (next_departure - clock)
+                
+                #susum += busy * (clock - upU)
+                upU = clock
+
+                
+                busy = True
+            else:
+                
+                sumQ = sumQ + nbQ * (clock - upQ)
+                upQ = clock
+                nbQ += 1
+
+                queue.append(clock)
+                
+        else:
+            clock = next_departure
+            
+            
+            sumN = sumN + nbS * (clock - upN)
+            nbS = nbS - 1
+            upN = clock
+            nb_dep += 1
+            
+            
+            if nbQ > 0:
+                
+                sumQ = sumQ + nbQ * (clock - upQ)
+                nbQ -= 1
+                upQ = clock
+                
+                first = queue.pop(0)
+                next_departure = clock + exponential(mu)
+                
+                sumT += (next_departure - first)
+                sumTq += (clock - first)
+                sumTs += (next_departure - clock)
+              
+            else:
+                susum += clock - upU
+                upU = clock
+    
+                busy = False
                
-                sumTqi = sumTqi + (clock - firstArr)
-                
-                sumTsi = sumTsi + (departure - clock)
-                
-                sumNqi = sumNqi + Nqi*(clock - upSumNqi)
-                upSumNqi = clock
-                
-                Nqi = Nqi - 1
-            else:
-                server_free = True
-                sumTS = sumTS + clock - upServer
-                departure = float('inf') 
-            
-            
-    N = sumNi/clock
-    
-    Nq = sumNqi/clock
-    
-    SU = sumTS/clock
-    
-    T = sumTi/NbC
-    
-    Tq = sumTqi/NbC
-    
-    Ts = sumTsi/NbC
-    
-    print(" =================Simulateur du modele M/M/1====================")
-    print("N =", round(N, 3))
-    print("Nq =", round(Nq, 3))
-    print("T =", round(T, 3))
-    print("Tq =", round(Tq, 3))
-    print("Ts =", round(Ts, 3))
-    print("Utilisation du serveur :", round(SU, 3))
+                next_departure = float('inf')
+               
 
-    return N, Nq, T, Tq, Ts, SU
+    N = sumN / clock
+    Nq = sumQ / clock
+    su = susum / clock
+    T = sumT / nb_dep
+    Tq = sumTq / nb_arr
+    Ts = sumTs / nb_dep
+
+
+    print(" =================Simulateur du modele M/M/1====================")
+
+    print("N =", round(N,3))
+    print("Nq =", round(Nq,3))
+    print("T =", round(T,3))
+    print("Tq =", round(Tq,3))
+    print("Ts =", round(Ts,3))
+    print("Server Utilization:", round(su,3))
+    return N, Nq, T, Tq, Ts, su
 
 
 # simulate(lam,mu,end_t )
 #%=======================================================================================================================================
+import matplotlib.pyplot as plt
 
 
 # Probabilité d'attente d'un client
@@ -149,7 +156,7 @@ def Ts_():
    return 1 / mu
 
 if  rho() < 1:
-    N, Nq, T, Tq, Ts, su = simulate(lam,mu,time_sim ) 
+    N, Nq, T, Tq, Ts, su = simulate(lam,mu,end_t ) 
 
     print(" ================= M/M/1 analytique ====================")
 
@@ -162,15 +169,15 @@ if  rho() < 1:
     print ("rho = ",  round(rho(),3))
     print ("P_0 = ", round(p_0(),3))
     
-    print(" ================= Erreurs relatives: |analytique - simulation|*100/ analytique ====================")
+    print(" ================= Ecart normaliséanalytique simulation ====================")
     
-    print ("Erreur relative N = ",  round(abs((N_()-N))*100/N_(),3),"%")
-    print ("Erreur relative  Nq = " ,  round(abs((Nq_()-Nq))*100/Nq_(),3),"%")
-    print ("Erreur relative  Ns = ",  round(abs((Ns_()-su))*100/Ns_(),3),"%")
-    print ("Erreur relative  T = ",  round(abs((T_()-T))*100/T_(),3),"%")
-    print ("Erreur relative  Tq = ",  round(abs((Tq_()-Tq))*100/Tq_(),3),"%")
-    print ("Erreur relative  Ts = ",  round(abs((Ts_()-Ts))*100/Ts_(),3),"%")
-    print ("Erreur relative  rho = ",  round(abs((rho()-su))*100/rho(),3),"%")
+    print ("Ecart N = ",  round((N_()-N)/N_(),3),"%")
+    print ("Ecart Nq = " ,  round((Nq_()-Nq)/Nq_(),3),"%")
+    print ("Ecart Ns = ",  round((Ns_()-su)/Ns_(),3),"%")
+    print ("Ecart T = ",  round((T_()-T)/T_(),3),"%")
+    print ("Ecart Tq = ",  round((Tq_()-Tq)/Tq_(),3),"%")
+    print ("Ecart Ts = ",  round((Ts_()-Ts)/Ts_(),3),"%")
+    print ("Ecart rho = ",  round((rho()-su)/rho(),3),"%")
  
 else:
    print("Le systeme n'est pas stationnaire: rho = ", round(rho(),3)," > 1")
